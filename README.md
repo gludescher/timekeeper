@@ -1,12 +1,11 @@
-# Timekeeper
-
-- [Timekeeper](#timekeeper)
-  - [Project](#project)
-  - [Installation](#installation)
-    - [Dependencies](#dependencies)
-  - [Usage](#usage)
-    - [First Run](#first-run)
-    - [Options](#options)
+# Timekeeper<!-- omit in toc --> 
+ 
+- [Project](#project)
+- [Installation](#installation)
+  - [Dependencies](#dependencies)
+- [Usage](#usage)
+  - [First Run](#first-run)
+  - [Options](#options)
 
 ## Project
 
@@ -59,7 +58,7 @@ These options define the action the tool will execute and are mutually excludent
 
 `--create`: Creates a new .csv file for registering logs.
 
-❗Attention: this will ovewrite the `timekeeper.csv` file, if it exists. A backup is recommended.
+❗Attention: this will overwrite the `timekeeper.csv` file, if it exists. A backup is recommended.
 
 `--begin`, `-b`: Adds a new line to the log with the current time as begin time. If the previous entry has no end time, a warning will be shown, asking for confirmation to proceed with the creation.
 
@@ -79,7 +78,7 @@ These options aren't required and modify an action option.
 python timekeeper.py -b -c Just some comment here
 ```
 
-`--period`, `-p`: Can be used with `--stats`. Defines the period (inclusive on both ends) from which to extract the stats. If only one date is passed, the end of the period will be set as the current date. It accepts multiple date formats, but will consider month before day whenever ambiguous.
+`--period`, `-p`: Can be used with `--stats` or `--table`. Defines the period (inclusive on both ends) from which to extract the stats. If only one date is passed, the end of the period will be set as the current date. It accepts multiple date formats, but will consider month before day whenever ambiguous.
 
 ```bash
 python timekeeper.py -s -p 2020-11-19 2020-12-03
