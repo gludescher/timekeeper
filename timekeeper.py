@@ -13,6 +13,7 @@ CREATE = 0
 BEGIN = 1
 END = 2
 STATS = 3
+TABLE = 4
 CURRENT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 #endregion
 
@@ -23,7 +24,9 @@ actions = {
     '--end': END,
     '-e': END,
     '--stats': STATS,
-    '-s': STATS
+    '-s': STATS,
+    '--table': TABLE,
+    '-t': TABLE,
 }
 
 #region begin action
@@ -81,19 +84,6 @@ def end_warning(start_time, stop_time):
     return wish_to_proceed()
 #endregion
 
-def wish_to_proceed(time_to_proceed=10):
-    accepted_inputs = ['y', 'yes', '1', 's', 'sim', 'n', 'no', 'nao', '0', 'time_for_input_ended']
-    positive_inputs = ['y', 'yes', '1', 's', 'sim']
-    negative_inputs = ['n', 'no', 'nao', '0']
-    received = ''
-
-    print('Proceeding automatically in {} seconds... Do you wish to proceed? [Y/N]'.format(time_to_proceed))
-    while(received not in accepted_inputs):
-        i, o, e = select.select([sys.stdin], [], [], time_to_proceed)
-        received = sys.stdin.readline().strip().lower() if i else 'time_for_input_ended'
-
-    return received not in negative_inputs
-
 #region stats action
 def get_period_sum(df):
     period_sum = df['time_spent'].sum()
@@ -139,6 +129,14 @@ def get_stats(df, start_date, end_date):
     stats = {**total_stats, **period_stats}
     
     print(tabulate_stats(stats))
+    return
+#endregion
+
+#region table action
+def get_table(df, start_date, end_date):
+    period_df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+    table = tabulate(period_df, headers='keys', tablefmt="fancy_grid", showindex=False)
+    print(table)
     return
 #endregion
 
@@ -208,6 +206,19 @@ def get_following_args(options, join=True):
 
     return ' '.join(option_arg) if join else option_arg
 
+def wish_to_proceed(time_to_proceed=10):
+    accepted_inputs = ['y', 'yes', '1', 's', 'sim', 'n', 'no', 'nao', '0', 'time_for_input_ended']
+    positive_inputs = ['y', 'yes', '1', 's', 'sim']
+    negative_inputs = ['n', 'no', 'nao', '0']
+    received = ''
+
+    print('Proceeding automatically in {} seconds... Do you wish to proceed? [Y/N]'.format(time_to_proceed))
+    while(received not in accepted_inputs):
+        i, o, e = select.select([sys.stdin], [], [], time_to_proceed)
+        received = sys.stdin.readline().strip().lower() if i else 'time_for_input_ended'
+
+    return received not in negative_inputs
+
 opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
 args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
 #endregion
@@ -227,5 +238,8 @@ elif action == END:
 elif action == STATS:
     start_date, end_date = get_period()
     get_stats(df, start_date, end_date)
+elif action == TABLE:
+    start_date, end_date = get_period()
+    get_table(df, start_date, end_date)
 
 save_dataframe(df)
