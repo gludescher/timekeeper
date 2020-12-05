@@ -17,6 +17,8 @@ At least for now, the tool does not have an executable version that handles all 
 
 ### Dependencies
 
+This project uses the following dependencies:
+
 - Python 3
 - Python 3 libs:
     - Pandas
@@ -24,7 +26,19 @@ At least for now, the tool does not have an executable version that handles all 
     - Dateutil
     - Tabulate
 
-After making sure the dependencies are satisfied, download the `timekeeper.py` file.
+Start a virtual environment:
+
+```bash
+virtualenv venv 
+source venv/Scripts/activate
+```
+
+
+To install the correct version for this project, run:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Usage
 
