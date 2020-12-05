@@ -26,15 +26,14 @@ This project uses the following dependencies:
     - Dateutil
     - Tabulate
 
-Start a virtual environment:
+Start a virtual environment (recommended):
 
 ```bash
 virtualenv venv 
 source venv/Scripts/activate
 ```
 
-
-To install the correct version for this project, run:
+Then run:
 
 ```bash
 pip install -r requirements.txt
