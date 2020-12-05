@@ -15,7 +15,6 @@ END = 2
 STATS = 3
 TABLE = 4
 CURRENT_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
-#endregion
 
 actions = {
     '--create': CREATE,
@@ -28,6 +27,7 @@ actions = {
     '--table': TABLE,
     '-t': TABLE,
 }
+#endregion
 
 #region begin action
 def start_the_count(df, comment=None):
@@ -35,13 +35,12 @@ def start_the_count(df, comment=None):
     begin_time = datetime.now()
     end_time = None
     time_spent = None
-    new_row = df.shape[0]
-    old_row = df.shape[0] - 1
+    new_row = df.shape[0] 
 
-    old_end_time = df.loc[old_row]['end_time']
-    old_begin_time = df.loc[old_row]['begin_time']
-    if pd.isnull(old_end_time):
-        if not begin_warning(old_begin_time):
+    if not previous_row_complete(df):
+        previous_row = new_row - 1
+        previous_begin_time = df.loc[previous_row]['begin_time']
+        if not begin_warning(previous_begin_time):
             print('Entry not created.')
             return
 
@@ -49,6 +48,13 @@ def start_the_count(df, comment=None):
 
     print('Added a new entry with begin time {}'.format(begin_time.strftime('%Y-%m-%d-%H:%M:%S')))
     return
+
+def previous_row_complete(df):
+    if df.shape[0] == 0:
+        return True
+    previous_row = df.shape[0] - 1
+    previous_begin_time = df.loc[previous_row]['end_time']
+    return not pd.isnull(previous_begin_time)
 
 def begin_warning(start_time):
     print('WARNING: Last entry, with begin time {}, has no end time. This will create a new entry and leave the end time for the previous one empty until manually edited.'.format(start_time.strftime('%Y-%m-%d-%H:%M:%S')))
@@ -146,7 +152,10 @@ def create_dataframe():
     return df
 
 def open_dataframe(path=CURRENT_DIR, file_name='timekeeper.csv'):
-    df = pd.read_csv(path+'/'+file_name, parse_dates=['date', 'begin_time', 'end_time'])
+    if os.path.exists(path+'/'+file_name):
+        df = pd.read_csv(path+'/'+file_name, parse_dates=['date', 'begin_time', 'end_time'])
+    else:
+        df = create_dataframe()
     return df
 
 def save_dataframe(df, path=CURRENT_DIR, file_name='timekeeper.csv'):
@@ -227,19 +236,19 @@ action = get_action()
 comment = get_comment()
 include_stats = with_stats()
 
-df = open_dataframe()
-
 if action == CREATE:
     df = create_dataframe()
-elif action == BEGIN:
-    start_the_count(df, comment)
-elif action == END: 
-    stop_the_count(df, comment)
-elif action == STATS:
-    start_date, end_date = get_period()
-    get_stats(df, start_date, end_date)
-elif action == TABLE:
-    start_date, end_date = get_period()
-    get_table(df, start_date, end_date)
+else:
+    df = open_dataframe()
+    if action == BEGIN:         
+        start_the_count(df, comment)
+    elif action == END: 
+        stop_the_count(df, comment)
+    elif action == STATS:
+        start_date, end_date = get_period()
+        get_stats(df, start_date, end_date)
+    elif action == TABLE:
+        start_date, end_date = get_period()
+        get_table(df, start_date, end_date)
 
 save_dataframe(df)
