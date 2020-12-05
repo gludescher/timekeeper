@@ -146,7 +146,10 @@ def create_dataframe():
     return df
 
 def open_dataframe(path=CURRENT_DIR, file_name='timekeeper.csv'):
-    df = pd.read_csv(path+'/'+file_name, parse_dates=['date', 'begin_time', 'end_time'])
+    if os.path.exists(path+'/'+file_name):
+        df = pd.read_csv(path+'/'+file_name, parse_dates=['date', 'begin_time', 'end_time'])
+    else:
+        df = create_dataframe()
     return df
 
 def save_dataframe(df, path=CURRENT_DIR, file_name='timekeeper.csv'):
