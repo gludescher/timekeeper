@@ -227,19 +227,19 @@ action = get_action()
 comment = get_comment()
 include_stats = with_stats()
 
-df = open_dataframe()
-
 if action == CREATE:
     df = create_dataframe()
-elif action == BEGIN:
-    start_the_count(df, comment)
-elif action == END: 
-    stop_the_count(df, comment)
-elif action == STATS:
-    start_date, end_date = get_period()
-    get_stats(df, start_date, end_date)
-elif action == TABLE:
-    start_date, end_date = get_period()
-    get_table(df, start_date, end_date)
+else:
+    df = open_dataframe()
+    if action == BEGIN:         
+        start_the_count(df, comment)
+    elif action == END: 
+        stop_the_count(df, comment)
+    elif action == STATS:
+        start_date, end_date = get_period()
+        get_stats(df, start_date, end_date)
+    elif action == TABLE:
+        start_date, end_date = get_period()
+        get_table(df, start_date, end_date)
 
 save_dataframe(df)
