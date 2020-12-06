@@ -73,9 +73,9 @@ These options define the action the tool will execute and are mutually excludent
 
 ❗Attention: this will overwrite the `timekeeper.csv` file, if it exists. A backup is recommended.
 
-`--begin`, `-b`: Adds a new line to the log with the current time as begin time. If the previous entry has no end time, a warning will be shown, asking for confirmation to proceed with the creation.
+`--begin`, `-b`: Adds a new line to the log with the current time as begin time. If the previous entry has no end time, a warning will be shown, asking for confirmation to proceed with the creation. By default, the time set is the current time, but this can be changed with the option `--date`.
 
-`--end`, `-e`: Edits the last line of the log with the current time as end time. If the previous entry already has an end time, a warning will be shown, asking for confirmation to proceed with the overwriting.
+`--end`, `-e`: Edits the last line of the log with the current time as end time. If the previous entry already has an end time, a warning will be shown, asking for confirmation to proceed with the overwriting. By default, the time set is the current time, but this can be changed with the option `--date`.
 
 `--stats`, `-s`: Displays stats for a specific period and for all the entries. By default, the period is the current calendar month and this can be changed using the modifier `--period`.
 
@@ -95,4 +95,10 @@ python timekeeper.py -b -c Just some comment here
 
 ```bash
 python timekeeper.py -s -p 2020-11-19 2020-12-03
+```
+
+`--date`, `-d`: Can be used with `--begin` or `--end`. Defines the specific date and time on which to insert/edit the entry. For end actions, the editted entry will be the first one without an end time to have the begin time before that.
+
+```bash
+python timekeeper.py -e -d 2020-11-19 19:30:00
 ```
