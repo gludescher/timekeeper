@@ -86,7 +86,6 @@ def stop_the_count(df, end_time=None, comment=None):
     return
 
 def find_end_row(df, end_time=None):
-    print(end_time)
     if end_time:
         row = df[(pd.isnull(df['end_time'])) & (df['begin_time'] < end_time)].tail(1).index[0]
     else: 
