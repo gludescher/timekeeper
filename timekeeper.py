@@ -30,12 +30,13 @@ actions = {
 #endregion
 
 #region begin action
-def start_the_count(df, comment=None):
-    date = datetime.today().strftime('%Y-%m-%d')
-    begin_time = datetime.now()
+def start_the_count(df, begin_time=None, comment=None):
+    if not begin_time:
+        begin_time = datetime.now()
+    date =  begin_time.strftime('%Y-%m-%d')
     end_time = None
     time_spent = None
-    new_row = df.shape[0] 
+    new_row = df.shape[0]
 
     if not previous_row_complete(df):
         previous_row = new_row - 1
@@ -62,18 +63,17 @@ def begin_warning(start_time):
 #endregion
 
 #region end action
-def stop_the_count(df, comment=None):
-    row = df.shape[0]-1
+def stop_the_count(df, end_time=None, comment=None):
+    row = find_end_row(df, end_time)
     begin_time = df.loc[row]['begin_time']
-    end_time = df.loc[row]['end_time']
+    previous_end_time = df.loc[row]['end_time']
     old_comment = df.loc[row]['comments']
 
-    if not pd.isnull(end_time):
+    if not pd.isnull(previous_end_time):
         if not end_warning(begin_time, end_time):
             print('Entry not overriden.')
             return
 
-    end_time = datetime.now()
     df.loc[row, 'end_time'] = end_time
 
     td = end_time - begin_time
@@ -84,6 +84,13 @@ def stop_the_count(df, comment=None):
 
     print('Edited entry with period {} => {}'.format(begin_time.strftime('%Y-%m-%d-%H:%M:%S'), end_time.strftime('%Y-%m-%d-%H:%M:%S')))
     return
+
+def find_end_row(df, end_time=None):
+    if end_time:
+        row = df[(pd.isnull(df['end_time'])) & (df['begin_time'] < end_time)].tail(1).index[0]
+    else: 
+        row = df.tail(1).index[0]
+    return row
 
 def end_warning(start_time, stop_time):    
     print('WARNING: Overriding end time for period: {} => {}'.format(start_time.strftime('%Y-%m-%d-%H:%M:%S'), stop_time.strftime('%Y-%m-%d-%H:%M:%S')))
@@ -159,7 +166,7 @@ def open_dataframe(path=CURRENT_DIR, file_name='timekeeper.csv'):
     return df
 
 def save_dataframe(df, path=CURRENT_DIR, file_name='timekeeper.csv'):
-    df.to_csv(path+'/'+file_name, index=False)
+    df.sort_values(by='date').to_csv(path+'/'+file_name, index=False)
     return
 #endregion
 
@@ -189,6 +196,14 @@ def get_period():
         start_date = datetime(today.year, today.month, 1)
         end_date = today
     return start_date, end_date
+
+def get_date():
+    if '-d' in opts or '--date' in opts:
+        date = get_following_args(['-d', '--d'], join=True)
+        date_time = parser.parse(date)
+    else:
+        date_time = None
+    return date_time
 
 def with_stats():
     return '-s' in opts or '--sum' in opts 
@@ -240,10 +255,12 @@ if action == CREATE:
     df = create_dataframe()
 else:
     df = open_dataframe()
-    if action == BEGIN:         
-        start_the_count(df, comment)
+    if action == BEGIN:    
+        begin_time = get_date()     
+        start_the_count(df, begin_time=begin_time, comment=comment)
     elif action == END: 
-        stop_the_count(df, comment)
+        end_time = get_date()
+        stop_the_count(df, end_time=end_time, comment=comment)
     elif action == STATS:
         start_date, end_date = get_period()
         get_stats(df, start_date, end_date)
