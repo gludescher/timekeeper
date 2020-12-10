@@ -29,7 +29,7 @@ class TimeDataDataframe(object):
         self.__df.sort_values(by='date').to_csv(self.__path+'/'+self.__file_name, index=False)
         pass
 
-    def create(self):
+    def add(self):
         pass
 
     def read(self):
