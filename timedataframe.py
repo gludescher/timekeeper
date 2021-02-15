@@ -18,7 +18,7 @@ class TimeDataframe(object):
         pass
 
     def __open_dataframe(self):
-        self.__df = pd.read_csv(self.__path+'/'+self.__file_name, parse_dates=['date', 'begin_time', 'end_time'])
+        self.__df = pd.read_csv(self.__path+'/'+self.__file_name, parse_dates=['date', 'begin_time', 'end_time'], sep='\t')
         pass
 
     def __create_dataframe(self):    
@@ -26,7 +26,7 @@ class TimeDataframe(object):
         pass
 
     def close(self):
-        self.__df.sort_values(by='date').to_csv(self.__path+'/'+self.__file_name, index=False)
+        self.__df.sort_values(by='date').to_csv(self.__path+'/'+self.__file_name, index=False, sep='\t')
         pass
 
     def add(self, date, begin_time, end_time, comment):

@@ -62,13 +62,14 @@ class ConsoleInput(object):
         comment = None
         if COMMENT in self.__options_args:
             comment = ' '.join(self.__options_args[COMMENT])
+            comment = comment.replace('\t', '  ')
         return comment
 
     def get_period(self):
         if PERIOD in self.__options_args:
             dates = self.__options_args[PERIOD]
-            date_1 = parser.parse(dates[0])
-            date_2 = parser.parse(dates[1]) if len(dates) > 1 else datetime.today()
+            date_1 = self.__parse_date(dates[0])
+            date_2 = self.__parse_date(dates[1]) if len(dates) > 1 else datetime.today()
             start_date = min(date_1, date_2)
             end_date = max(date_1, date_2)
         else: 
@@ -94,6 +95,25 @@ class ConsoleInput(object):
         i = self.__valid_input("Do you wish to proceed? [Y/N]", positive_inputs+negative_inputs)        
         return i in positive_inputs
 
+    def valid_numeric_input(self, message, min=None, max=None):
+        valid = False
+        while(not valid):
+            print(message)
+            i = input().replace(',', '.')
+            valid, number = self.__valid_number(number=i, min=min, max=max)
+        return number
+
+    def __valid_number(self, number, min=None, max=None):
+        try:
+            number = float(number)
+            if (min and number < min) or (max and number > max):
+                valid = False
+            else:
+                valid = True
+        except:
+            valid = False
+        return valid, number
+            
     def __valid_input(self, message, accepted_inputs):
         text = None
         while (text not in accepted_inputs):
@@ -111,3 +131,13 @@ class ConsoleInput(object):
                     break
                 options_args[run_options[opt]].append(i)
         return options_args
+
+    def __parse_date(self, date):
+        if date.lower().startswith('today'):
+            return datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        if date.lower().startswith('yesterday'):
+            return (datetime.today() - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        return parser.parse(date)
+
