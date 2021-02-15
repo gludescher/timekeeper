@@ -9,6 +9,7 @@ import os
 from pandas.core.frame import DataFrame
 from tabulate import tabulate
 from timedataframe import TimeDataframe
+from console_input import ConsoleInput
 
 #region globals
 CREATE = 0 
@@ -33,7 +34,7 @@ actions = {
 
 #region begin action
 def start_the_count(data, begin_time, comment=None):
-    date =  begin_time.strftime('%Y-%m-%d')
+    date = datetime(begin_time.year, begin_time.month, begin_time.day)
     end_time = None
 
     if not previous_row_complete(data) and not begin_warning(data.read(data.last_entry_id())['begin_time']):
@@ -53,7 +54,7 @@ def previous_row_complete(data):
 
 def begin_warning(start_time):
     print('WARNING: Last entry, with begin time {}, has no end time. This will create a new entry and leave the end time for the previous one empty until manually edited.'.format(start_time.strftime('%Y-%m-%d-%H:%M:%S')))
-    return wish_to_proceed()
+    return user_input.wish_to_proceed()
 #endregion
 
 #region end action
@@ -81,7 +82,7 @@ def stop_the_count(data, end_time, comment=None):
 
 def end_warning(start_time, stop_time):    
     print('WARNING: Overriding end time for period: {} => {}'.format(start_time.strftime('%Y-%m-%d-%H:%M:%S'), stop_time.strftime('%Y-%m-%d-%H:%M:%S')))
-    return wish_to_proceed()
+    return user_input.wish_to_proceed()
 #endregion
 
 #region stats action
@@ -100,9 +101,10 @@ def get_period_workday_avg(df, start_date, end_date):
     return period_sum/workdays_count, workdays_count
 
 def calculate_periods(df, row=None):
-    df['time_spent'] = df['end_time'] - df['begin_time']
-    df['time_spent'] = (df['time_spent'].dt.seconds/3600).round(4)
-    return df
+    df_temp = df.copy()
+    df_temp['time_spent'] = df_temp['end_time'] - df_temp['begin_time']
+    df_temp['time_spent'] = (df_temp['time_spent'].dt.seconds/3600).round(4)
+    return df_temp
 
 def tabulate_stats(stats):
     stats_df = pd.DataFrame(columns=['Period', 'Total Hours', 'Days Worked', 'Daily Average', 'Workdays', 'Average by Workday'])
@@ -140,116 +142,33 @@ def get_table(data, start_date, end_date):
     return
 #endregion
 
-#region input handling
-def get_action():
-    action = next((actions[a] for a in actions if a in opts), None)
-    if action is None:
-        i = valid_input("Are you registering the beginning or end of period? [B/E]", ['b', 'begin', 'e', 'end'])
-        action = BEGIN if i in ['b', 'begin'] else END
-    return action
-
-def get_comment():
-    comment = None
-    if '-c' in opts or '--comment' in opts:
-        comment = get_following_args(['-c', '--comment'])
-    return comment
-
-def get_period():
-    if '-p' in opts or '--period' in opts:
-        dates = get_following_args(['-p', '--period'], join=False)
-        date_1 = parser.parse(dates[0])
-        date_2 = parser.parse(dates[1]) if len(dates) > 1 else datetime.today()
-        start_date = min(date_1, date_2)
-        end_date = max(date_1, date_2)
-    else:
-        today = datetime.today()
-        start_date = datetime(today.year, today.month, 1)
-        end_date = today
-    return start_date, end_date
-
-def get_date():
-    if '-d' in opts or '--date' in opts:
-        date = get_following_args(['-d', '--d'], join=True)
-        date_time = parser.parse(date)
-    else:
-        date_time = datetime.now()
-    return date_time
-
-def with_stats():
-    return '-s' in opts or '--sum' in opts 
-
-def valid_input(message, accepted_inputs):
-    text = None
-    while (text not in accepted_inputs):
-        print(message)
-        text = input().lower()
-    return text
-
-def get_following_args(options, join=True):
-    option_arg = []
-    for option in options:
-        try:
-            opt_index = sys.argv[1:].index(option)
-            for arg in sys.argv[opt_index+2:]:
-                if arg.startswith('-'):
-                    break
-                option_arg.append(arg)
-            break
-        except:
-            continue
-
-    return ' '.join(option_arg) if join else option_arg
-
-def wish_to_proceed():
-    accepted_inputs = ['y', 'yes', '1', 's', 'sim', 'n', 'no', 'nao', '0', 'time_for_input_ended']
-    _positive_inputs = ['y', 'yes', '1', 's', 'sim']
-    negative_inputs = ['n', 'no', 'nao', '0']
-    received = ''
-
-    print('Do you wish to proceed? [Y/N]')
-    while(received not in accepted_inputs):
-        received = input()
-        
-    return received not in negative_inputs
-
-# not in use
-def timed_wish_to_proceed(time_to_proceed=10):
-    accepted_inputs = ['y', 'yes', '1', 's', 'sim', 'n', 'no', 'nao', '0', 'time_for_input_ended']
-    _positive_inputs = ['y', 'yes', '1', 's', 'sim']
-    negative_inputs = ['n', 'no', 'nao', '0']
-    received = ''
-
-    print('Proceeding automatically in {} seconds... Do you wish to proceed? [Y/N]'.format(time_to_proceed))
-    while(received not in accepted_inputs):
-        i, _o, _e = select.select([sys.stdin], [], [], time_to_proceed)
-        received = sys.stdin.readline().strip().lower() if i else 'time_for_input_ended'
-
-    return received not in negative_inputs
-
-opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
-args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
-#endregion
-
-action = get_action()
-comment = get_comment()
-include_stats = with_stats()
+user_input = ConsoleInput()
 data = TimeDataframe()
+
+action = user_input.get_action()
+comment = user_input.get_comment()
+include_stats = user_input.include_stats()
+
 
 if action == CREATE:
     data.open(force_create_new = True)
 else:
     data.open()
     if action == BEGIN:    
-        begin_time = get_date()     
+        begin_time = user_input.get_date()     
         start_the_count(data, begin_time, comment=comment)
     elif action == END: 
-        end_time = get_date()
+        end_time = user_input.get_date()
         stop_the_count(data, end_time=end_time, comment=comment)
     elif action == STATS:
-        start_date, end_date = get_period()
+        start_date, end_date = user_input.get_period()
         get_stats(data, start_date, end_date)
     elif action == TABLE:
-        start_date, end_date = get_period()
+        start_date, end_date = user_input.get_period()
         get_table(data, start_date, end_date)
+
+if include_stats and not action == STATS:
+    start_date, end_date = user_input.get_period()
+    get_stats(data, start_date, end_date)
 
 data.close()
