@@ -18,7 +18,7 @@ class TimeDataframe(object):
         pass
 
     def __open_dataframe(self):
-        self.__df = pd.read_csv(self.__path+'/'+self.__file_name, parse_dates=['date', 'begin_time', 'end_time'])
+        self.__df = pd.read_csv(self.__path+'/'+self.__file_name, parse_dates=['date', 'begin_time', 'end_time'], sep='\t')
         pass
 
     def __create_dataframe(self):    
@@ -26,7 +26,7 @@ class TimeDataframe(object):
         pass
 
     def close(self):
-        self.__df.sort_values(by='date').to_csv(self.__path+'/'+self.__file_name, index=False)
+        self.__df.sort_values(by='date').to_csv(self.__path+'/'+self.__file_name, index=False, sep='\t')
         pass
 
     def add(self, date, begin_time, end_time, comment):
@@ -46,7 +46,10 @@ class TimeDataframe(object):
 
     def last_entry_id(self, end_time=None):
         if end_time:
-            return self.__df[(pd.isnull(self.__df['end_time'])) & (self.__df['begin_time'] < end_time)].tail(1).index[0]
+            try:
+                return self.__df[(pd.isnull(self.__df['end_time'])) & (self.__df['begin_time'] < end_time)].tail(1).index[0]
+            except:
+                return self.__df.shape[0] - 1
         else:
             return 0 if self.__df.shape[0] == 0 else self.__df.shape[0] - 1
 
